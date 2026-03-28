@@ -6,20 +6,28 @@ const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
+
   const [sessionId] = useState(() => {
     let id = localStorage.getItem('session_id');
-    if (!id) { id = uuidv4(); localStorage.setItem('session_id', id); }
+    if (!id) {
+      id = uuidv4();
+      localStorage.setItem('session_id', id);
+    }
     return id;
   });
 
   const fetchCart = useCallback(async () => {
-    const res = await getCart(sessionId);
-    setCartItems(res.data);
+    try {
+      const res = await getCart(sessionId);
+      setCartItems(res.data);
+    } catch (error) {
+      console.error("Error fetching cart:", error);
+    }
   }, [sessionId]);
 
   useEffect(() => {
     fetchCart();
-  }, [fetchCart]);
+  }, [sessionId]);
 
   const addItem = async (product_id, quantity = 1) => {
     await addToCart({ session_id: sessionId, product_id, quantity });
@@ -39,7 +47,17 @@ export const CartProvider = ({ children }) => {
   const totalItems = cartItems.reduce((sum, i) => sum + i.quantity, 0);
 
   return (
-    <CartContext.Provider value={{ cartItems, addItem, updateItem, removeItem, totalItems, sessionId, fetchCart }}>
+    <CartContext.Provider
+      value={{
+        cartItems,
+        addItem,
+        updateItem,
+        removeItem,
+        totalItems,
+        sessionId,
+        fetchCart
+      }}
+    >
       {children}
     </CartContext.Provider>
   );
