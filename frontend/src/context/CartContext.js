@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { getCart, addToCart, updateCartItem, removeFromCart } from '../api/api';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -12,12 +12,14 @@ export const CartProvider = ({ children }) => {
     return id;
   });
 
-  const fetchCart = async () => {
+  const fetchCart = useCallback(async () => {
     const res = await getCart(sessionId);
     setCartItems(res.data);
-  };
+  }, [sessionId]);
 
-  useEffect(() => { fetchCart(); }, []);
+  useEffect(() => {
+    fetchCart();
+  }, [fetchCart]);
 
   const addItem = async (product_id, quantity = 1) => {
     await addToCart({ session_id: sessionId, product_id, quantity });
